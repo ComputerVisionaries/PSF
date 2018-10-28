@@ -1,6 +1,30 @@
 import numpy as np
 from scipy.misc import imread, imsave
 
+
+# Return the greatest common factor of two numbers
+def gcf(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+
+def simplest_square_scramble(img):
+    imrows, imcols = img.shape[:-1]
+    sq_size = gcf(imrows, imcols)
+    return scramble_with_sizes(img, sq_size, sq_size)
+
+
+def scramble_with_sizes(img, size_horiz, size_vertical):
+    imrows, imcols = img.shape[:-1]
+    if imcols % size_horiz != 0:
+        raise ValueError('Cannot Divide the Puzzle Horizontally')
+    if imrows % size_vertical != 0:
+        raise ValueError('Cannot Divide the Puzzle Vertically')
+
+    return image_scramble(img, imcols / size_horiz, imrows / size_vertical)
+
+
 def image_scramble(img, x_tiles, y_tiles):
     imrows, imcols = img.shape[:-1]
     if imrows % y_tiles != 0:
@@ -39,7 +63,7 @@ def image_scramble(img, x_tiles, y_tiles):
 
 if __name__=='__main__':
     img = imread('creatures_pic.jpg')
-    scrambled = image_scramble(img, 40, 40)
+    scrambled = simplest_square_scramble(img)
     imsave('creatures_scrambled.png', scrambled)
 
 
