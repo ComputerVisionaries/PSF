@@ -58,8 +58,8 @@ def rgb_similarity(img1, img2, pos):
 
 
 if __name__ == '__main__':
-    img0_0 = plt.imread("frog0-0.jpeg")
-    img0_1 = plt.imread("frog0-1.jpeg")
+    img0_0 = plt.imread("../images/frog0-0.jpeg")
+    img0_1 = plt.imread("../images/frog0-1.jpeg")
 
     error = rgb_similarity(img0_0, img0_1, RelativePosition.left_right)
     print(error)
