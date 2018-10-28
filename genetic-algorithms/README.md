@@ -37,7 +37,7 @@ To create puzzle from image use `create_puzzle` script.
 i.e.
 
 ```bash
-$ create_puzzle images/pillars.jpg --size=48 --destination=puzzle.jpg
+$ create_puzzle images/pillars.jpg --size 48 48 --destination=puzzle.jpg
 
 [SUCCESS] Puzzle created with 420 pieces
 
@@ -63,7 +63,7 @@ In order to solve puzzles, use `gaps` script.
 i.e.
 
 ```bash
-$ gaps --image=puzzle.jpg --generations=20 --population=600
+$ gaps --image=puzzle.jpg --size 80 40 --generations=20 --population=600
 ```
 
 This will start genetic algorithm with initial population of 600 and 20 generations.
@@ -73,7 +73,7 @@ Following options are provided:
 Option          | Description
 --------------- | -----------
 `--image`       | Path to puzzle
-`--size`        | Puzzle piece size in pixels
+`--size`        | Puzzle piece size in pixels (width, height)
 `--generations` | Number of generations for genetic algorithm
 `--population`  | Number of individuals in population
 `--verbose`     | Show best solution after each generation
@@ -81,19 +81,11 @@ Option          | Description
 
 Run `gaps --help` for detailed help.
 
-## Size detection
-
-If you don't explicitly provide `--size` argument to `gaps`, piece size will be detected automatically.
-
 However, you can always provide `gaps` with `--size` argument explicitly:
 
 ```bash
-$ gaps --image=puzzle.jpg --generations=20 --population=600 --size=48
+$ gaps --image=puzzle.jpg --generations=20 --population=600 --size 48 60
 ```
-
-__NOTE__ *Size detection feature works for the most images but there are some edge cases
-where size detection fails and detects incorrect piece size. In that case you can
-explicitly set piece size.*
 
 ## Termination condition
 
