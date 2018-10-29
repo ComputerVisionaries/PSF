@@ -1,5 +1,4 @@
 import numpy as np
-from puzzle.piece import Piece
 
 def inflate_image(pieces, rows, columns):
     """Assembles image from pieces.
@@ -23,7 +22,6 @@ def inflate_image(pieces, rows, columns):
     for i in range(rows):
         horizontal_stack = []
         for j in range(columns):
-            print(pieces[i * columns + j].shape)
             horizontal_stack.append(pieces[i * columns + j])
         vertical_stack.append(np.hstack(horizontal_stack))
 
