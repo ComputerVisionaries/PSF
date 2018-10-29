@@ -10,6 +10,7 @@
 
 """
 
+
 class AbstractSolver:
 
     def __init__(self, pieces, width, height):

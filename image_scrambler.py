@@ -12,6 +12,7 @@ def gcf(a, b):
 def simplest_square_scramble(img):
     imrows, imcols = img.shape[:-1]
     sq_size = gcf(imrows, imcols)
+    print("size : {}".format(sq_size))
     return scramble_with_sizes(img, sq_size, sq_size)
 
 
@@ -62,9 +63,9 @@ def image_scramble(img, x_tiles, y_tiles):
 
 
 if __name__=='__main__':
-    img = imread('creatures_pic.jpg')
-    scrambled = simplest_square_scramble(img)
-    imsave('creatures_scrambled.png', scrambled)
+    img = imread('./images/baboon.jpg')
+    scrambled = scramble_with_sizes(img,64,64)
+    imsave('puzzle.png', scrambled)
 
 
 
