@@ -9,21 +9,21 @@ def lab_similarity(img1, img2, orientations=['LR', 'RL', 'TD', 'DT']):
     lab_img2 = rgb2lab(img2)
 
     rows, cols, _ = lab_img1.shape
-    color_difference = None
+    diff = None
 
     similarities = {}
 
     for orientation in orientations:
         if orientation == 'LR':
-            color_difference = lab_img1[:rows, -1] - lab_img2[:rows, 0]
+            diff = lab_img1[:rows, -1] - lab_img2[:rows, 0]
         elif orientation == 'RL':
-            color_difference = lab_img2[:rows, -1] - lab_img1[:rows, 0]
+            diff = lab_img2[:rows, -1] - lab_img1[:rows, 0]
         elif orientation == 'TD':
-            color_difference = lab_img1[-1, :cols] - lab_img2[0, :cols]
+            diff = lab_img1[-1, :cols] - lab_img2[0, :cols]
         elif orientation == 'DT':
-            color_difference = lab_img2[-1, :cols] - lab_img1[0, :cols]
+            diff = lab_img2[-1, :cols] - lab_img1[0, :cols]
 
-        similarities[orientation] = np.sqrt(np.sum(np.square(color_difference)))
+        similarities[orientation] = np.sqrt(np.sum(np.square(diff)))
     
     return similarities
 
