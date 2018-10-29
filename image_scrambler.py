@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import numpy as np
 from scipy.misc import imread, imsave
 
@@ -64,8 +66,10 @@ def image_scramble(img, x_tiles, y_tiles):
 
 if __name__=='__main__':
     img = imread('./images/baboon.jpg')
-    scrambled = scramble_with_sizes(img,64,64)
-    imsave('puzzle.png', scrambled)
+    pxl_width = 16
+    pxl_height = 16
+    scrambled = scramble_with_sizes(img,pxl_width,pxl_height)
+    imsave('puzzle.jpg', scrambled)
 
 
 

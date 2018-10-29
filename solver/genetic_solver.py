@@ -8,7 +8,6 @@ import bisect
 import heapq
 from operator import attrgetter
 
-from util.flatten_image import flatten_image
 from puzzle.puzzle import Puzzle
 from util.piece_cache import PieceCache
 
@@ -71,9 +70,11 @@ class GeneticSolver(AbstractSolver):
         if best.fitness <= self._maxima:
             self._termination_counter += 1
         else:
+            self._termination_counter = 0
             self._maxima = best.fitness
 
         if self._termination_counter >= self.TERMINATION_THRESHOLD:
+            print("=== Genetic Algorithm : Terminated Early")
             self._done = True
 
         self._population = new_population
