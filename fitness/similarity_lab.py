@@ -1,14 +1,8 @@
 import numpy as np
-
-from enum import Enum
 from skimage.color import rgb2lab
 from skimage.io import imread
+from RelativePosition import RelativePosition
 
-class RelativePosition(Enum):
-    LEFT_RIGHT = 0
-    RIGHT_LEFT = 1
-    ABOVE_BELOW = 2
-    BELOW_ABOVE = 3
 
 def lab_similarity(img1, img2, pos):
     lab_img1 = rgb2lab(img1)
@@ -30,7 +24,7 @@ def lab_similarity(img1, img2, pos):
     elif pos == RelativePosition.BELOW_ABOVE:
         diff = lab_img2[-1, :cols] - lab_img1[0, :cols]
         div = cols
-    
+
     return np.sqrt(np.sum(np.square(diff))) / div
 
 

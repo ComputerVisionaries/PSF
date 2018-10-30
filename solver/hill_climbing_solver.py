@@ -1,6 +1,7 @@
 import numpy as np
 from itertools import combinations
-from fitness.similarity_rgb import rgb_similarity
+from fitness.similarity_gradient import gradient_similarity
+from fitness.RelativePosition import RelativePosition
 import matplotlib.pyplot as plt
 
 # Copied from util/flatten_image.py until we fix module structure
@@ -50,9 +51,9 @@ def cost(pieces, dimensions, similarityFunction):
 			p1 = pieces[i + j * w]
 			for x, y, rel in [
 				# Right piece
-				(i + 1, j, rgb_similarity.RelativePosition.LEFT_RIGHT),
+				(i + 1, j, RelativePosition.LEFT_RIGHT),
 				# Below piece
-				(i, j + 1, rgb_similarity.RelativePosition.ABOVE_BELOW)]:
+				(i, j + 1, RelativePosition.ABOVE_BELOW)]:
 				if 0 <= x < w and 0 <= y < h:
 					p2 = pieces[x + y * w]
 					c += similarityFunction(p1, p2, pos=rel)
@@ -93,7 +94,7 @@ if __name__ == "__main__":
 	# iterations = 10
 	# bestcost, best = hillClimbingWithRestarts(puzzle, (n, n), rgb_similarity, iterations)
 	sq_iters = 2
-	results = sorted([randomHillClimbing(puzzle, (n, n), rgb_similarity) for _ in range(sq_iters ** 2)], key=lambda x: x[0])
+	results = sorted([randomHillClimbing(puzzle, (n, n), gradient_similarity) for _ in range(sq_iters ** 2)], key=lambda x: x[0])
 	for i in range(sq_iters ** 2):
 		ax = plt.subplot(sq_iters, sq_iters, i + 1)
 		ax.set_title("cost=%.2f" % results[i][0])
