@@ -1,5 +1,4 @@
-from gaps.fitness import dissimilarity_measure
-from gaps.progress_bar import print_progress
+from fitness.edge_difference import edge_difference
 
 
 class PieceCache(object):
@@ -31,7 +30,7 @@ class PieceCache(object):
             }
 
         def update_best_match_table(first_piece, second_piece):
-            measure = dissimilarity_measure(first_piece, second_piece, orientation)
+            measure = edge_difference(first_piece, second_piece, orientation)
             cls.put_dissimilarity((first_piece.id, second_piece.id), orientation, measure)
             cls.best_match_table[second_piece.id][orientation[0]].append((first_piece.id, measure))
             cls.best_match_table[first_piece.id][orientation[1]].append((second_piece.id, measure))
@@ -39,7 +38,6 @@ class PieceCache(object):
         # Calculate dissimilarity measures and best matches for each piece.
         iterations = len(pieces) - 1
         for first in range(iterations):
-            print_progress(first, iterations - 1, prefix="=== Analyzing image:")
             for second in range(first + 1, len(pieces)):
                 for orientation in ["LR", "TD"]:
                     update_best_match_table(pieces[first], pieces[second])

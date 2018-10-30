@@ -34,6 +34,6 @@ def flatten_image(image, pixel_width, pixel_height, indexed=False):
             pieces.append(piece)
 
     if indexed:
-        pieces = [Piece(value, index) for index, value in enumerate(pieces)]
+        pieces = [Piece(value, index, None) for index, value in enumerate(pieces)]
 
     return pieces, rows, columns
