@@ -3,7 +3,8 @@ PSF/
     fitness/
         __init__.py
         edge_difference.py
-        lab_similarity.py
+        similarity_rgb.py
+        similarity_lab.py
     puzzle/
         __init__.py
         piece.py
