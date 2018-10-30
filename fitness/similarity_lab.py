@@ -17,16 +17,21 @@ def lab_similarity(img1, img2, pos):
     rows, cols, _ = lab_img1.shape
     diff = None
 
+    div = 1
     if pos == RelativePosition.LEFT_RIGHT:
         diff = lab_img1[:rows, -1] - lab_img2[:rows, 0]
+        div = rows
     elif pos == RelativePosition.RIGHT_LEFT:
         diff = lab_img2[:rows, -1] - lab_img1[:rows, 0]
+        div = cols
     elif pos == RelativePosition.ABOVE_BELOW:
         diff = lab_img1[-1, :cols] - lab_img2[0, :cols]
+        div = rows
     elif pos == RelativePosition.BELOW_ABOVE:
         diff = lab_img2[-1, :cols] - lab_img1[0, :cols]
-
-    return np.sqrt(np.sum(np.square(diff)))
+        div = cols
+    
+    return np.sqrt(np.sum(np.square(diff))) / div
 
 
 if __name__ == '__main__':
