@@ -16,9 +16,13 @@ class Piece(object):
 
     """
 
-    def __init__(self, image, index):
+    def __init__(self, image, index, sides):
         self.image = image[:]
         self.id = index
+
+        # T = top, B = bottom, L = left, R = right
+        # 0 = edge, 1 = head, -1 = divot
+        self._sides = sides
 
     def __getitem__(self, index):
         return self.image.__getitem__(index)

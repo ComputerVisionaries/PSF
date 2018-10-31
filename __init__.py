@@ -16,3 +16,4 @@ PSF/
         flatten_image.py
         inflate_immage.py
         piece_cache.py
+        progres_bar.py

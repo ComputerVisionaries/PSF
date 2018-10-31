@@ -1,4 +1,6 @@
 #!/usr/bin/env python2
+
+# SYSTEM IMPORTS
 from __future__ import print_function
 
 from solver.abstract_solver import AbstractSolver
@@ -8,6 +10,7 @@ import bisect
 import heapq
 from operator import attrgetter
 
+# MODULE IMPORTS
 from puzzle.puzzle import Puzzle
 from util.piece_cache import PieceCache
 
@@ -35,7 +38,6 @@ class GeneticSolver(AbstractSolver):
         self._mut_rate = mut_rate
         self._elites = elites
 
-
         PieceCache.analyze_image(self._pieces)
 
         self._population = [Puzzle(pieces, width, height) for _ in range(pop_size)]
@@ -43,12 +45,10 @@ class GeneticSolver(AbstractSolver):
         self._maxima = float("-inf")
         self._termination_counter = 0
 
-        self._done = False
+        self.done = False
+        self.exit_msg = "=== Solver ran for ALL iterations"
 
     def run_iteration(self):
-
-        if self._done:
-            return
 
         fittest = None
 
@@ -74,8 +74,7 @@ class GeneticSolver(AbstractSolver):
             self._maxima = best.fitness
 
         if self._termination_counter >= self.TERMINATION_THRESHOLD:
-            print("=== Genetic Algorithm : Terminated Early")
-            self._done = True
+            self.done = True
 
         self._population = new_population
 

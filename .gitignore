@@ -107,5 +107,6 @@ venv.bak/
 .idea/
 
 # PSF files
-puzzle.{jpg,png}
-solved_puzzle.{jpg,png}
+puzzle.jpg
+solved_puzzle.jpg
+output/

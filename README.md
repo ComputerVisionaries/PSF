@@ -28,3 +28,8 @@ run.py : currently only runs GA solver on puzzle.jpg (outputs solved_puzzle.jpg 
 python image_scrambler.py<br />
 python run.py<br />
 "Output can be seen in puzzle.py and solved_puzzle.jpg"
+
+
+#TODO:
+- RHC/SA
+

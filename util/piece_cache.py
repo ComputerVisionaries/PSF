@@ -1,5 +1,8 @@
-from fitness.edge_difference import edge_difference
 
+# SYSTEM IMPORTS
+# MODULE IMPORTS
+from fitness.edge_difference import edge_difference
+from util.progress_bar import print_progress
 
 class PieceCache(object):
     """Cache for dissimilarity measures of individuals
@@ -38,6 +41,7 @@ class PieceCache(object):
         # Calculate dissimilarity measures and best matches for each piece.
         iterations = len(pieces) - 1
         for first in range(iterations):
+            print_progress(first, iterations - 1, prefix="=== Analyzing image:")
             for second in range(first + 1, len(pieces)):
                 for orientation in ["LR", "TD"]:
                     update_best_match_table(pieces[first], pieces[second])
