@@ -123,7 +123,7 @@ if __name__ == "__main__":
         print_progress(iteration, iterations-1, prefix="=== Solving puzzle: ")
         solver.run_iteration()
 
-        if solver.done:
+        if args.algorithm is "GA" and solver.done:
             print_progress(iterations, iterations, prefix="=== Solving puzzle: ")
             print "=== solver terminated @ round : {}".format(iteration)
             break
