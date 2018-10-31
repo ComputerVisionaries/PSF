@@ -5,6 +5,7 @@ Puzzle Solver Framework
 - Python 2
 - numpy
 - scipy
+- matplotlib
     
 
 
@@ -20,16 +21,13 @@ Puzzle Solver Framework
 - util: common tools to be used
 
 image_scrambler.py : turns a target image into a puzzle (outputs puzzle.jpg into root dir)
-run.py : currently only runs GA solver on puzzle.jpg (outputs solved_puzzle.jpg in root)
+psf.py : currently only runs GA solver on puzzle.jpg 
 
 
 
 #Example Usage
 python image_scrambler.py<br />
-python run.py<br />
-"Output can be seen in puzzle.py and solved_puzzle.jpg"
+python psf.py --iters 20<br />
+"Output can be seen in puzzle.py and output/solved_puzzle.jpg"
 
-
-#TODO:
-- RHC/SA
 
