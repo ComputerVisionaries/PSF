@@ -52,6 +52,7 @@ def flatten_image(image, row_count, column_count, indexed=False):
 
     if indexed:
         pieces = [Piece(value, index, None) for index, value in enumerate(pieces)]
+    
     print(("=== Image flattened \n"
            "    Piece width : {0}\n"
            "    Piece height : {1}\n").format(pixel_width, pixel_height))

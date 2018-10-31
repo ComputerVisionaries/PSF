@@ -1,13 +1,6 @@
-from enum import Enum
 import matplotlib.pyplot as plt
 import numpy as np
-
-
-class RelativePosition(Enum):
-    LEFT_RIGHT = 0
-    RIGHT_LEFT = 1
-    ABOVE_BELOW = 2
-    BELOW_ABOVE = 3
+from RelativePosition import RelativePosition
 
 
 def rgb_similarity(img1, img2, pos):
