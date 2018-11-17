@@ -11,6 +11,7 @@ from util.flatten_image import flatten_image
 from util.inflate_image import inflate_image
 from util.progress_bar import print_progress
 from solver.genetic_solver import GeneticSolver
+#from solver.hill_climbing_solver import
 
 
 """PSF : Puzzle Solver Framework
@@ -117,6 +118,9 @@ if __name__ == "__main__":
  
         solver = GeneticSolver(puzzle, rows, cols,
                                args.population, args.mutation, args.elite)
+
+    if (args.algorithm is "RHC"):
+        pass
 
     start = time()
     for iteration in range(iterations):
