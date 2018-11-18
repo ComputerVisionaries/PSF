@@ -1,14 +1,25 @@
 import cv2
+import random
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.misc import imread, imshow, imsave, electrocardiogram
 from  scipy.ndimage.filters import maximum_filter
 from scipy.signal import find_peaks
 
-def cart2pol(x, y):
-    rho = np.sqrt(x**2 + y**2)
-    phi = np.arctan2(y, x)
-    return(rho, phi)
+def cart2pol(epts):
+    # convert edge points to polar
+    x,y = epts[:,0], epts[:,1]
+    r = np.sqrt(x**2+y**2)
+    t = np.arctan2(y,x)
+
+    # combine pairwise the theta and magnitute of points 
+    return zip(t,r)
+
+def pol2cart(pts):
+    x = np.cos(pts[:,0]) * pts[:,1]
+    y = np.sin(pts[:,0]) * pts[:,1]
+    
+    return zip(x,y)
 
 def getCenter(mask):
     # calculate moments of binary image
@@ -21,6 +32,9 @@ def getCenter(mask):
     return cY, cX
 
 def getOutline(img, showSteps=False):
+
+    if showSteps:
+        imshow(img)
 
     kernel = np.ones((3,3),np.uint8)
 
@@ -99,13 +113,10 @@ def getOutline(img, showSteps=False):
     epts = np.array(zip(epts[0],epts[1]))
     epts = epts - center
 
-    # convert edge points to polar
-    x,y = epts[:,0], epts[:,1]
-    r = np.sqrt(x**2+y**2)
-    t = np.arctan2(y,x)
+    cpts = epts.copy()
 
-    # combine pairwise the theta and magnitute of points 
-    epts = zip(t,r)
+    # convert edge points to polar
+    epts = cart2pol(epts)
 
     # accessor functions for sorting
     getR = lambda pt : pt[0]
@@ -130,62 +141,90 @@ def getOutline(img, showSteps=False):
 
     # Get all points above average
     outer = epts[epts[:,1] > average]
-    
 
+    if showSteps:
+        plt.title("All Bpoints")
+        plt.scatter(outer[:,0], outer[:,1])
+        plt.show()
+    
     # Sort theshholded edge points by magnitute
     tse = list(outer.copy())
     tse.sort(key=getT)
     tse = np.array(tse)
 
-    # Get the 100 smallest magnitute edge points
-    # These are used to gind the groups of interest to try and find the corners
-    # bpoints are sorted by radius to work around in a circle
-    bpoints = tse[0:100]
-    bpoints = list(bpoints)
-    bpoints.sort(key=getR)
+    mx = 0
+    t = []
 
-    # TODO fix the bellow code to go through and find the corners better
-    cpatches = [bpoints[0]]
-    ranges = []
-    cpoint = bpoints[0]
-    npoint = bpoints[1]
-    master = 0
-    rctr = cpoint[0]
+    for i in range(len(outer) - 1):
+        l = outer[i]
+        r = outer[i + 1]
 
-    for pt in bpoints[1:]:
-        ctr = sum((tse[:,0] < npoint[0]) & (tse[:,0] > cpoint[0]))
-        if (ctr - master) > 5:
-           cpatches.append(pt)
-        rjump = abs(rctr- npoint[0])
-        if (rjump > .3):
-            cpatches.append(pt)
-        #print(rjump)
-        master = ctr
-        rctr = npoint[0]
-        npoint = pt
+        rd = r[0] - l[0]
+        if rd > .1:
+            t.append((l,r))
 
-    cpatches = np.array(cpatches)
+    t = np.array(t)
 
     if showSteps:
-        plt.title("Points of Interest")
+
+        r = t[:,:,0]
+        m = t[:,:,1]
+
+
+        plt.title("Found boundaries")
         plt.scatter(outer[:,0], outer[:,1])
-        plt.scatter(cpatches[:,0], cpatches[:,1], c='#FF0000')
+        plt.scatter(r, m, c='#FF0000')
         plt.show()
 
-    # TODO 
-    """
-    1. Select points for ranges of interest (basically the front and the back of t the points above a threshold for each corner"
-    2. Get the max of the points within the range of interest
-    3. Determine if the range of interest signifies a corner, a piece head, or a flat side (potential but not likely)
-    4. Sample points from the edge of the piece to act as the side feature
-    """  
+    maxs = []
+
+    for i in range(len(t) - 1):
+        l = t[i][1]
+        r = t[i + 1][0]
+
+        pts = outer[(outer[:,0] > l[0]) & (outer[:,0] < r[0])]
+        m = max(pts, key=getT)
+
+        maxs.append(m)
+
+    # get one of the corners
+    pts = outer[outer[:,0] < t[0][0][0]]
+    omx = max(pts, key=getT)
+    
+    pts = outer[outer[:,0] > t[-1][1][0]]
+    tmx = max(pts, key=getT)
+
+    maxs.append(omx)
+
+    maxs.append(tmx)
+    
+    maxs = np.array(maxs)
+
+    if showSteps:
+        plt.title("Found maxes")
+        plt.scatter(outer[:,0], outer[:,1])
+        plt.scatter(maxs[:,0], maxs[:,1], c='#FF0000')
+        plt.show()
+
+    # edges
+    corners = pol2cart(maxs)
+    corners = np.array(corners)
+
+    plt.title("All Bpoints")
+    plt.scatter(cpts[:,0], cpts[:,1])
+    plt.scatter(corners[:,0], corners[:,1], c='#FF0000')
+    plt.show()
 
 
 
 if __name__ == "__main__":
-    im_in = cv2.imread("images/moanaIndividual/3_8.jpg")
-    #im_in = cv2.imread("images/moanaIndividual/0_0.jpg")
+    for i in range(8):
+        print(i,i)
+        f = "images/moanaIndividual/{}_{}.jpg".format(i,i)
+        im_in = cv2.imread(f)
+        imshow(im_in)
+        getOutline(im_in, False)
 
-    getOutline(im_in, True)
-
+    #im_in = cv2.imread("images/moanaIndividual/5_5.jpg")
+    #getOutline(im_in, True)
 
