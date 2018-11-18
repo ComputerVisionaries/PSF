@@ -36,23 +36,24 @@ def getOutline(img, showSteps=False):
     if showSteps:
         imshow(img)
 
+    timg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
     kernel = np.ones((3,3),np.uint8)
 
     # Threshold the image
-    lower_t = 155
-    upper_t = 255
-    _, im_th = cv2.threshold(img, lower_t, upper_t, cv2.THRESH_BINARY_INV);
+    lower_t = 150
+    upper_t = 240
+    _, im_th = cv2.threshold(timg, lower_t, upper_t, cv2.THRESH_BINARY_INV);
 
     if showSteps:
         plt.title("Threshold of ({}, {})".format(lower_t, upper_t))
         plt.imshow(im_th)
         plt.show()
 
-
     # Detect edges within the image
     lower_e = 12
     upper_e = 75
-    edges = cv2.Canny(img, upper_e, lower_e)
+    edges = cv2.Canny(timg, upper_e, lower_e)
 
     if showSteps:
         plt.title("Edges of ({}, {})".format(lower_t, upper_t))
@@ -60,8 +61,9 @@ def getOutline(img, showSteps=False):
         plt.show()
     
     # Combine the thresholded image and the edges together
-    for i in range(3):
-        im_th[:,:,i] += edges
+    
+    #for i in range(3):
+    im_th[:,:] += edges
 
 
     # Copy the thresholded image.
@@ -88,7 +90,7 @@ def getOutline(img, showSteps=False):
         imout = cv2.dilate(imout, kernel, iterations = 2 + i)
 
     # convert to greyscale and set
-    gray_image = cv2.cvtColor(imout, cv2.COLOR_BGR2GRAY)
+    gray_image = imout.copy()#cv2.cvtColor(imout, cv2.COLOR_BGR2GRAY)
     gray_image[gray_image < 255] = 0
 
     #imshow(gray_image)
@@ -135,9 +137,13 @@ def getOutline(img, showSteps=False):
         plt.title("Polar Edge points")
         plt.show()  
 
+    
     # I take the average distance to the center
-    # This is used as a threshold to find the corner points of the image
+    # This is used as a threshold to find the corner points of the image  
+    mx = max(epts[:,1])    
     average = sum(epts[:,1]) / epts.shape[0]
+
+    average = average + mx/16
 
     # Get all points above average
     outer = epts[epts[:,1] > average]
@@ -210,21 +216,87 @@ def getOutline(img, showSteps=False):
     corners = pol2cart(maxs)
     corners = np.array(corners)
 
-    plt.title("All Bpoints")
-    plt.scatter(cpts[:,0], cpts[:,1])
-    plt.scatter(corners[:,0], corners[:,1], c='#FF0000')
+
+    #if showSteps:
+    opts = cpts + center
+    ocrn = corners + center
+    tcorn = np.array([])
+    for cand in ocrn:
+        test = [cand]
+        ftest = []
+        for corn in ocrn:
+            if not (cand[0] == corn[0] and cand[1] == corn[1]):
+                latd = abs(cand[1] - corn[1])
+                verd = abs(cand[0] - corn[0])
+
+                if latd < 100 or verd < 100:
+                    test.append(corn)
+                else:
+                    ftest.append(corn)
+        
+        if len(test) == 3:
+            c0 = test[0]
+            c1 = test[1]
+            c2 = test[2]
+
+            mn = 200
+            mc = None
+
+            for corn in ftest:
+                t1 = min(abs(c1[0] - corn[0]), abs(c1[1] - corn[1]))
+                t2 = min(abs(c2[0] - corn[0]), abs(c2[1] - corn[1]))
+
+                if (t1 < 100 and t2 < 100) and (t1 + t2 < mn):
+                    mn = t1 + t2
+                    mc = corn
+
+                
+            if not mc is None:
+                test.append(mc)
+
+
+
+        
+        test = np.array(test)
+
+        moreCorners = len(test) > len(tcorn)
+        fourCorners = len(test) == 4
+        centerTest = (sum(test[:,0] > center[0]))
+
+        if fourCorners:
+            tcorn = test.copy()
+
+
+    if tcorn.size == 0:
+        return False
+
+    if showSteps:
+        plt.imshow(img)
+        plt.title("Points on piece")
+        plt.scatter(ocrn[:,1], ocrn[:,0], c='#FF0000')
+        plt.show()
+
+    plt.imshow(img)
+    plt.title("Points on piece")
+    plt.scatter(tcorn[:,1], tcorn[:,0], c='#FF0000')
     plt.show()
+
+    return True
 
 
 
 if __name__ == "__main__":
-    for i in range(8):
-        print(i,i)
-        f = "images/moanaIndividual/{}_{}.jpg".format(i,i)
-        im_in = cv2.imread(f)
-        imshow(im_in)
-        getOutline(im_in, False)
 
-    #im_in = cv2.imread("images/moanaIndividual/5_5.jpg")
-    #getOutline(im_in, True)
+    for i in range(8):
+        for j in range(12):
+            print(i,j)
+            f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
+            im_in = cv2.imread(f)
+            test = getOutline(im_in, False)
+            if not test:
+                print("error test {} failed".format(i))
+    """
+    im_in = cv2.imread("images/moanaIndividual/6_6.jpg")
+    getOutline(im_in, False)
+    """
 
