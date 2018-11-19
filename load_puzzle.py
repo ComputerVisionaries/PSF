@@ -33,7 +33,7 @@ def getCenter(mask):
 
     return cY, cX
 
-def getOutline(img, showSteps, lt=150, ut=240):
+def getPieceBitmask(img, showSteps, lt=150, ut=240):
     """ returns a binary mask of the piece"""
 
     # General purpose kernel used for multiple things
@@ -287,8 +287,16 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
 
         moreCorners = len(test) > len(tcorn)
         fourCorners = len(test) == 4
+
         verticalTest = (sum(test[:,0] > center[0]) == 2)
         horizontalTest = (sum(test[:,1] > center[1]) == 2)
+
+        spaceTest = True
+        for pt in test:
+            if spaceTest:
+                #print(pt, (test - pt > 0) & (test - pt < 100))
+                spaceTest = not np.any((test - pt > 0) & (test - pt < 100))
+
 
         if fourCorners and verticalTest and horizontalTest:
             tcorn = test.copy()
@@ -298,85 +306,83 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
     return tcorn, True
 
 
-def extractPiece(img, lval, showSteps=False):
+def extractPiece(img, showSteps=False):
 
-    
-    # seperate into parts of failure
-    # - if bitmask isnt right we need to fix it
-    # - if edge threshold is too high we need to fix it as well
+    # Show image if debug on
     if showSteps:
         imshow(img)
-
-    timg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    lower = lval
-    bitmapSuccess = False
-    gray_image = np.array([])
-    while not bitmapSuccess and lower >= 0:
-        #print(lower)
-        gray_image, bitmapSuccess = getOutline(timg, showSteps, lower)
-        lower -= 2
-
-    if not bitmapSuccess:
-        return False, lower
-
     
+    # Loop from a threshold value of 200 to 100 to try and find the corners
+    lower = 170
+    while lower >= 100:
 
-    #imshow(gray_image)
-    if showSteps:
-        plt.title("Piece Bitmask")
-        plt.imshow(gray_image)
+        # Bitmap extraction works better on grayscale image
+        grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+        bitmaskSuccess = False
+        bitmask = np.array([])
+        while not bitmaskSuccess and lower >= 0:
+            #print(lower)
+            bitmask, bitmaskSuccess = getPieceBitmask(grayImg, showSteps, lower)
+            lower -= 2
+
+        # No acceptable bitmask found. Lower threshold and try again
+        if not bitmaskSuccess:
+            continue
+
+        if showSteps:
+            plt.title("Piece Bitmask")
+            plt.imshow(bitmask)
+            plt.show()
+
+        # Loop to find a corner assignment by varying max threshold value 
+        ival = 8
+        cornerSuccess = False
+        while not cornerSuccess:
+            tcorn, cornerSuccess = getCorners(bitmask, ival, 1, showSteps)
+            #print("Testing tval: {} output {}".format(ival, success))
+            ival *= 1.5
+
+            if ival > 100:
+                break
+
+        # Loop to find a corner assignment by varying the max threshold value in a different way
+        bfactor = .9
+        while not cornerSuccess and bfactor >= .5:
+            tcorn, cornerSuccess = getCorners(bitmask, ival, bfactor, showSteps)
+            bfactor -= .05
+
+        # failed to find a corner assignment so lower bitmask threshold and try again
+        if not cornerSuccess:
+            continue
+
+        # show the successful corner assignment
+        plt.imshow(img)
+        plt.title("Points on piece")
+        plt.scatter(tcorn[:,1], tcorn[:,0], c='#FF0000')
         plt.show()
 
-    ival = 8
-    cornerSuccess = False
-    while not cornerSuccess:
-        tcorn, cornerSuccess = getCorners(gray_image, ival, 1, showSteps)
-        #print("Testing tval: {} output {}".format(ival, success))
-        ival *= 1.5
-
-        if ival > 100:
-            break
-
-    bfactor = .9
-    while not cornerSuccess and bfactor >= .5:
-        tcorn, cornerSuccess = getCorners(gray_image, ival, bfactor, showSteps)
-        bfactor -= .05
-
-    if not cornerSuccess:
-        return False, lower
-
-    plt.imshow(img)
-    plt.title("Points on piece")
-    plt.scatter(tcorn[:,1], tcorn[:,0], c='#FF0000')
-    plt.show()
-
-    return True, lower
+        return True
+    if lower < 100:
+        return False
 
 
 
 if __name__ == "__main__":
-
-    for i in range(4,8):
-        for j in range(6,12):
+    """
+    for i in range(8):
+        for j in range(12,13):
             print(i,j)
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
-
-            success = False
-            lval = 200
-            while lval >= 100 and not success:
-                success, lval = extractPiece(im_in, lval, False)
+            success = extractPiece(im_in, False)
 
             if not success:
                 print("error test {} failed".format(i))
     """
-    im_in = cv2.imread("images/moanaIndividual/4_9.jpg")
+    im_in = cv2.imread("images/moanaIndividual/1_12.jpg")
     success = False
-    lval = 200
-    while lval >= 100 and not success:
-        success, lval = extractPiece(im_in, lval, False)
-        print(lval)
+    success = extractPiece(im_in, False)
     print(success)
-    """
 
 
