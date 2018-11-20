@@ -553,6 +553,6 @@ def load_puzzle():
             
             pieces.append(piece(im_in, (i * 8) + j, edges))
 
-    
+    return pieces    
 
 
