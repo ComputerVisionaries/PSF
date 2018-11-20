@@ -6,6 +6,13 @@ from scipy.misc import imread, imshow, imsave, electrocardiogram
 from  scipy.ndimage.filters import maximum_filter
 from scipy.signal import find_peaks
 
+
+from puzzle.physicalPiece import PhysicalPiece as piece
+
+# accessor functions for sorting
+getR = lambda pt : pt[0]
+getT = lambda pt : pt[1]
+
 def cart2pol(epts):
     """ Takes in an Nx2 list of (x,y) points """
     # convert edge points to polar
@@ -21,7 +28,7 @@ def pol2cart(pts):
     x = np.cos(pts[:,0]) * pts[:,1]
     y = np.sin(pts[:,0]) * pts[:,1]
     
-    return zip(x,y)
+    return np.array(zip(x,y))
 
 def getCenter(mask):
     # calculate moments of binary image
@@ -131,10 +138,6 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
     # convert edge points to polar
     epts = cart2pol(epts)
 
-    # accessor functions for sorting
-    getR = lambda pt : pt[0]
-    getT = lambda pt : pt[1]
-
     # sort edge points by angle
     epts.sort(key=getR)
 
@@ -183,7 +186,6 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
     t = np.array(t)
 
     if t.size == 0:
-        print("Error : no points of interest found in outer")
         return False, []
     
     if showSteps:
@@ -291,19 +293,158 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
         verticalTest = (sum(test[:,0] > center[0]) == 2)
         horizontalTest = (sum(test[:,1] > center[1]) == 2)
 
-        spaceTest = True
-        for pt in test:
-            if spaceTest:
-                #print(pt, (test - pt > 0) & (test - pt < 100))
-                spaceTest = not np.any((test - pt > 0) & (test - pt < 100))
-
-
         if fourCorners and verticalTest and horizontalTest:
             tcorn = test.copy()
 
     if tcorn.size == 0:
         return tcorn, False
+    
     return tcorn, True
+
+def getSides(bitmask, corners, showSteps):
+
+    # General purpose kernel used for multiple things
+    kernel = np.ones((3,3),np.uint8)
+
+    center = getCenter(bitmask)
+    edges = cv2.Canny(bitmask,75,12)
+
+    if showSteps:   
+        plt.imshow(bitmask)
+        plt.scatter(corners[:,1], corners[:,0])
+        plt.show()
+    
+    pet = cart2pol(np.argwhere(edges==255) - center)
+    pcorn = cart2pol(corners - center)
+
+    pet = list(pet)
+    pet.sort(key=getR)
+    pet = np.array(pet)
+    
+    pcorn = list(pcorn)
+    pcorn.sort(key=getR)
+    pcorn = np.array(pcorn)
+
+    lr = (pcorn[0][0], pcorn[1][0])
+    br = (pcorn[1][0], pcorn[2][0])
+    rr = (pcorn[2][0], pcorn[3][0])
+    tr = (pcorn[3][0], pcorn[0][0])
+
+    # get the normal edges found
+    er = []
+    for ran in [lr, br, rr]:
+        ranges = pet[(pet[:,0] > ran[0]) & (pet[:,0] < ran[1])]
+
+        tmp = center + pol2cart(ranges)
+        er.append(tmp)
+
+    # get the edge found on the boundary between -2pi and 0
+    ranges = pet[(pet[:,0] > tr[0]) | (pet[:,0] < tr[1])]
+    tmp = center + pol2cart(ranges)
+    er.append(np.round(tmp).astype(int))
+
+    er[0][:,1] = (er[0][:,1] * 0.9) + (np.array([center[0]]) * 0.1)
+    er[1][:,0] = (er[1][:,0] * 0.9) + (np.array([center[1]]) * 0.1)
+    er[2][:,1] = (er[2][:,1] * 0.9) + (np.array([center[0]]) * 0.1)
+    er[3][:,0] = (er[3][:,0] * 0.9) + (np.array([center[1]]) * 0.1)
+
+
+    er[0] = np.round(er[0]).astype(int)
+    er[1] = np.round(er[1]).astype(int)
+    er[2] = np.round(er[2]).astype(int)
+    er[3] = np.round(er[3]).astype(int)
+    
+
+    if showSteps:
+        for r in er:
+            plt.imshow(bitmask)
+            plt.scatter(r[:,1], r[:,0])
+            plt.show()
+
+    return er, center
+
+def classifySides(sides, center):
+
+    cls = []
+
+    tval = 50
+
+    # classify left
+    l = sides[0]   
+    lt = l[np.argmin(l[:,0])]
+    lb = l[np.argmax(l[:,0])]
+
+    lca = (lt[1] + lb[1]) / 2
+
+    la = sum(l[:,1]) / len(l[:,1])
+
+    print("left")
+    print(lca, la)
+    if la - lca > tval:
+        cls.append(-1)
+    elif lca - la > tval:
+        cls.append(1)
+    else:
+        cls.append(0)
+        
+    # classify bottom
+    b = sides[1]
+    bl = b[np.argmin(b[:,1])]
+    br = b[np.argmin(b[:,1])]
+    
+    bca = (bl[0] + br[0]) / 2
+ 
+    ba = sum(b[:,0]) / len(b[:,0])
+
+    print("bottom")
+    print(bca, ba)
+    if bca - ba > tval:
+        cls.append(-1)
+    elif ba - bca > tval:
+        cls.append(1)
+    else:
+        cls.append(0)
+
+    # classify right
+    r = sides[2]
+    rt = r[np.argmin(r[:,0])]
+    rb = r[np.argmin(r[:,0])]
+
+    rca = (rt[1] + rb[1]) / 2
+    
+    ra = sum(r[:,1])  / len(r[:,1])
+
+    print("right")
+    print(rca, ra)
+    if rca - ra > tval:
+        cls.append(-1)
+    elif ra - rca > tval:
+        cls.append(1)
+    else:
+        cls.append(0)
+
+    # classify top
+    t = sides[1]
+    tl = t[np.argmin(t[:,1])]
+    tr = t[np.argmin(t[:,1])]
+    
+    tca = (tl[0] + tr[0]) / 2
+    
+    ta = sum(t[:,0]) / len(t[:,0])
+
+    print("top")
+    print(tca, ta)
+    if ta - tca > tval:
+        cls.append(-1)
+    elif tca - ta > tval:
+        cls.append(1)
+    else:
+        cls.append(0) 
+
+    print(cls)
+
+    
+    
 
 
 def extractPiece(img, showSteps=False):
@@ -339,7 +480,7 @@ def extractPiece(img, showSteps=False):
         ival = 8
         cornerSuccess = False
         while not cornerSuccess:
-            tcorn, cornerSuccess = getCorners(bitmask, ival, 1, showSteps)
+            corners, cornerSuccess = getCorners(bitmask, ival, 1, showSteps)
             #print("Testing tval: {} output {}".format(ival, success))
             ival *= 1.5
 
@@ -349,7 +490,7 @@ def extractPiece(img, showSteps=False):
         # Loop to find a corner assignment by varying the max threshold value in a different way
         bfactor = .9
         while not cornerSuccess and bfactor >= .5:
-            tcorn, cornerSuccess = getCorners(bitmask, ival, bfactor, showSteps)
+            corners, cornerSuccess = getCorners(bitmask, ival, bfactor, showSteps)
             bfactor -= .05
 
         # failed to find a corner assignment so lower bitmask threshold and try again
@@ -357,32 +498,61 @@ def extractPiece(img, showSteps=False):
             continue
 
         # show the successful corner assignment
-        plt.imshow(img)
-        plt.title("Points on piece")
-        plt.scatter(tcorn[:,1], tcorn[:,0], c='#FF0000')
-        plt.show()
+        if showSteps:
+            plt.imshow(img)
+            plt.title("Points on piece")
+            plt.scatter(corners[:,1], corners[:,0], c='#FF0000')
+            plt.show()
 
-        return True
+        break
+
     if lower < 100:
         return False
 
+    sidePts, center = getSides(bitmask, corners, showSteps)
+    #sideType = classifySides(sidePts, center)
+
+    # get pixel values of side points
+
+    
+    evals = {}
+    evals["l"] = [img[pt[0],pt[1]] for pt in sidePts[0]]
+    evals["b"] = [img[pt[0],pt[1]] for pt in sidePts[1]]
+    evals["r"] = [img[pt[0],pt[1]] for pt in sidePts[2]]
+    evals["t"] = [img[pt[0],pt[1]] for pt in sidePts[3]]
+
+    return evals
 
 
-if __name__ == "__main__":
-    """
+def generate_edges():
+    pieces = []
+
     for i in range(8):
-        for j in range(12,13):
+        for j in range(13):
             print(i,j)
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
             success = extractPiece(im_in, False)
 
-            if not success:
-                print("error test {} failed".format(i))
-    """
-    im_in = cv2.imread("images/moanaIndividual/1_12.jpg")
-    success = False
-    success = extractPiece(im_in, False)
-    print(success)
+            if success == False:
+                raise Exception("Failed to extract the piece")
+
+            else:
+                #pieces.append(piece(im_in, (i * 8) + j, edges))
+                np.save("edges/{}_{}.npy".format(i,j), success)
+
+def load_puzzle():
+    pieces = []
+
+    for i in range(8):
+        for j in range(13):
+            print(i,j)
+            f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
+            im_in = cv2.imread(f)
+            edges = np.load('edges/{}_{}.npy'.format(i,j)).item()
+            
+            pieces.append(piece(im_in, (i * 8) + j, edges))
+
+    
 
 
