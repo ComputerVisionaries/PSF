@@ -20,14 +20,14 @@ def cart2pol(epts):
     r = np.sqrt(x**2+y**2)
     t = np.arctan2(y,x)
 
-    # combine pairwise the theta and magnitute of points 
+    # combine pairwise the theta and magnitute of points
     return zip(t,r)
 
 def pol2cart(pts):
     """ Takes in an Nx2 list of (theta,magnitude) points """
     x = np.cos(pts[:,0]) * pts[:,1]
     y = np.sin(pts[:,0]) * pts[:,1]
-    
+
     return np.array(zip(x,y))
 
 def getCenter(mask):
@@ -59,26 +59,26 @@ def getPieceBitmask(img, showSteps, lt=150, ut=240):
     lower_e = 12
     upper_e = 75
     edges = cv2.Canny(img, upper_e, lower_e)
-    
+
     # Combine the thresholded image and the edges together
     im_th += edges
 
 
     # Copy the thresholded image.
     im_floodfill = im_th.copy()
- 
+
     # Mask used to flood filling.
     # Notice the size needs to be 2 pixels than the image.
     h, w = im_th.shape[:2]
     mask = np.zeros((h+2, w+2), np.uint8)
 
     # Floodfill from point (0, 0)
-    cv2.floodFill(im_floodfill, mask, (0,0), 255);    
+    cv2.floodFill(im_floodfill, mask, (0,0), 255);
 
     # Invert floodfilled image
     im_floodfill_inv = cv2.bitwise_not(im_floodfill)
     cv2.dilate(im_floodfill_inv, kernel, iterations=2)
-    
+
 
     # Combine the two images to get the foreground.
     imout = im_th | im_floodfill_inv
@@ -94,7 +94,7 @@ def getPieceBitmask(img, showSteps, lt=150, ut=240):
 
     tltest = gray_image[0,0] == 255
     trtest = gray_image[0,-1] == 255
-    bltest = gray_image[-1,0] == 255    
+    bltest = gray_image[-1,0] == 255
     brtest = gray_image[-1,-1] == 255
 
     if tltest or trtest or bltest or brtest:
@@ -109,7 +109,7 @@ def getPieceBitmask(img, showSteps, lt=150, ut=240):
         plt.title("Edges of ({}, {})".format(lower_t, upper_t))
         plt.imshow(edges)
         plt.show()
-    
+
     #gray_image = cv2.erode(gray_image, kernel, iterations = 6)
     return gray_image, True
 
@@ -143,19 +143,19 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
 
     # I convert from python list to numpy array often
     # - Python list sort method does what I want
-    # - Numpy is used to access and do stuff with 
-    epts = np.array(epts) 
+    # - Numpy is used to access and do stuff with
+    epts = np.array(epts)
 
     if showSteps:
         print(tval)
         plt.scatter(epts[:,0], epts[:,1])
         plt.title("Polar Edge points")
-        plt.show()  
+        plt.show()
 
-    
+
     # I take the average distance to the center
-    # This is used as a threshold to find the corner points of the image  
-    mx = max(epts[:,1])    
+    # This is used as a threshold to find the corner points of the image
+    mx = max(epts[:,1])
     average = sum(epts[:,1]) / epts.shape[0]
 
     average = (average * bfactor) + mx/tval
@@ -167,7 +167,7 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
         plt.title("All Bpoints")
         plt.scatter(outer[:,0], outer[:,1])
         plt.show()
-    
+
     # Sort theshholded edge points by magnitute
     tse = list(outer.copy())
     tse.sort(key=getT)
@@ -187,7 +187,7 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
 
     if t.size == 0:
         return False, []
-    
+
     if showSteps:
 
         rad = t[:,:,0]
@@ -217,7 +217,7 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
     if pts.size == 0:
         return [], False
     omx = max(pts, key=getT)
-    
+
     pts = outer[outer[:,0] > t[-1][1][0]]
     if pts.size == 0:
         return [], False
@@ -226,7 +226,7 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
     maxs.append(omx)
 
     maxs.append(tmx)
-    
+
     maxs = np.array(maxs)
 
     if showSteps:
@@ -263,7 +263,7 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
                     test.append(corn)
                 else:
                     ftest.append(corn)
-        
+
         if len(test) == 3:
             c0 = test[0]
             c1 = test[1]
@@ -280,7 +280,7 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
                     mn = t1 + t2
                     mc = corn
 
-                
+
             if not mc is None:
                 test.append(mc)
 
@@ -298,7 +298,7 @@ def getCorners(img, tval, bfactor=1, showSteps=True):
 
     if tcorn.size == 0:
         return tcorn, False
-    
+
     return tcorn, True
 
 def getSides(bitmask, corners, showSteps):
@@ -309,18 +309,18 @@ def getSides(bitmask, corners, showSteps):
     center = getCenter(bitmask)
     edges = cv2.Canny(bitmask,75,12)
 
-    if showSteps:   
+    if showSteps:
         plt.imshow(bitmask)
         plt.scatter(corners[:,1], corners[:,0])
         plt.show()
-    
+
     pet = cart2pol(np.argwhere(edges==255) - center)
     pcorn = cart2pol(corners - center)
 
     pet = list(pet)
     pet.sort(key=getR)
     pet = np.array(pet)
-    
+
     pcorn = list(pcorn)
     pcorn.sort(key=getR)
     pcorn = np.array(pcorn)
@@ -353,7 +353,7 @@ def getSides(bitmask, corners, showSteps):
     er[1] = np.round(er[1]).astype(int)
     er[2] = np.round(er[2]).astype(int)
     er[3] = np.round(er[3]).astype(int)
-    
+
 
     if showSteps:
         for r in er:
@@ -370,7 +370,7 @@ def classifySides(sides, center):
     tval = 50
 
     # classify left
-    l = sides[0]   
+    l = sides[0]
     lt = l[np.argmin(l[:,0])]
     lb = l[np.argmax(l[:,0])]
 
@@ -386,14 +386,14 @@ def classifySides(sides, center):
         cls.append(1)
     else:
         cls.append(0)
-        
+
     # classify bottom
     b = sides[1]
     bl = b[np.argmin(b[:,1])]
     br = b[np.argmin(b[:,1])]
-    
+
     bca = (bl[0] + br[0]) / 2
- 
+
     ba = sum(b[:,0]) / len(b[:,0])
 
     print("bottom")
@@ -411,7 +411,7 @@ def classifySides(sides, center):
     rb = r[np.argmin(r[:,0])]
 
     rca = (rt[1] + rb[1]) / 2
-    
+
     ra = sum(r[:,1])  / len(r[:,1])
 
     print("right")
@@ -427,9 +427,9 @@ def classifySides(sides, center):
     t = sides[1]
     tl = t[np.argmin(t[:,1])]
     tr = t[np.argmin(t[:,1])]
-    
+
     tca = (tl[0] + tr[0]) / 2
-    
+
     ta = sum(t[:,0]) / len(t[:,0])
 
     print("top")
@@ -439,12 +439,12 @@ def classifySides(sides, center):
     elif tca - ta > tval:
         cls.append(1)
     else:
-        cls.append(0) 
+        cls.append(0)
 
     print(cls)
 
-    
-    
+
+
 
 
 def extractPiece(img, showSteps=False):
@@ -452,7 +452,7 @@ def extractPiece(img, showSteps=False):
     # Show image if debug on
     if showSteps:
         imshow(img)
-    
+
     # Loop from a threshold value of 200 to 100 to try and find the corners
     lower = 170
     while lower >= 100:
@@ -476,7 +476,7 @@ def extractPiece(img, showSteps=False):
             plt.imshow(bitmask)
             plt.show()
 
-        # Loop to find a corner assignment by varying max threshold value 
+        # Loop to find a corner assignment by varying max threshold value
         ival = 8
         cornerSuccess = False
         while not cornerSuccess:
@@ -514,7 +514,7 @@ def extractPiece(img, showSteps=False):
 
     # get pixel values of side points
 
-    
+
     evals = {}
     evals["l"] = [img[pt[0],pt[1]] for pt in sidePts[0]]
     evals["b"] = [img[pt[0],pt[1]] for pt in sidePts[1]]
@@ -522,6 +522,48 @@ def extractPiece(img, showSteps=False):
     evals["t"] = [img[pt[0],pt[1]] for pt in sidePts[3]]
 
     return evals
+
+
+def extractPieceWithCoords(img, showSteps=False):
+
+    # Show image if debug on
+    if showSteps:
+        imshow(img)
+
+    # img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+    # plt.imshow(img[..., ::-1])
+    # plt.show()
+
+    # blur = cv2.blur(img, (15, 15))
+    blur = cv2.medianBlur(img, 15)
+    # plt.imshow(blur[..., ::-1])
+    # plt.show()
+
+    sampleBackground = blur[0:1000, ...]
+    sampleBackground = np.vstack((sampleBackground, blur[3250:, ...]))
+    samplePixel = np.mean(sampleBackground, axis=(0, 1))
+    sampleStds = np.std(sampleBackground, axis=(0, 1))
+
+    lowerBound = samplePixel - 3 * sampleStds
+    upperBound = samplePixel + 3 * sampleStds
+
+    mask = cv2.inRange(blur, lowerBound, upperBound)
+    plt.imshow(mask)
+    plt.show()
+
+    dst = cv2.cornerHarris(mask, 2, 3, 0.04)
+    plt.imshow(dst)
+    plt.show()
+
+    return "ERROR: Method not implemented yet"
+
+    # evals = {}
+    # evals["l"] = [[pt[0], pt[1]] for pt in sidePts[0]]
+    # evals["b"] = [[pt[0], pt[1]] for pt in sidePts[1]]
+    # evals["r"] = [[pt[0], pt[1]] for pt in sidePts[2]]
+    # evals["t"] = [[pt[0], pt[1]] for pt in sidePts[3]]
+
+    # return evals
 
 
 def generate_edges():
@@ -533,13 +575,16 @@ def generate_edges():
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
             success = extractPiece(im_in, False)
+            # success = extractPieceWithCoords(im_in, False)
 
             if success == False:
                 raise Exception("Failed to extract the piece")
 
             else:
-                #pieces.append(piece(im_in, (i * 8) + j, edges))
-                np.save("edges/{}_{}.npy".format(i,j), success)
+                # pieces.append(piece(im_in, (i * 8) + j, edges))
+                np.save("edges/{}_{}.npy".format(i, j), success)
+                # np.save("edges_coords/{}_{}.npy".format(i, j), success)
+
 
 def load_puzzle():
     pieces = []
@@ -550,9 +595,8 @@ def load_puzzle():
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
             edges = np.load('edges/{}_{}.npy'.format(i,j)).item()
-            
+            # edges = np.load('edges_coords/{}_{}.npy'.format(i,j)).item()
+
             pieces.append(piece(im_in, (i * 8) + j, edges))
 
-    return pieces    
-
-
+    return pieces
