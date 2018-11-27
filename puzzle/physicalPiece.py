@@ -2,6 +2,22 @@
 
 import numpy as np
 
+
+class Side:
+
+    def __init__(self, edge, shape):
+        self.edge = edge
+        self.shape = shape
+
+    # Array of RGB pixels for the given edge's side
+    def get_edge(self):
+        return self.edge
+
+    # -1 divot, 1 head, 0 flat
+    def get_shape(self):
+        return self.shape
+
+
 class PhysicalPiece:
     """Represents single jigsaw puzzle piece.
 
@@ -11,36 +27,27 @@ class PhysicalPiece:
     :param image: ndarray representing piece's RGB values
     :param index: Unique id withing piece's parent image
 
-    Usage::
-
-        >>> from puzzle.piece import Piece
-        >>> piece = Piece(image[:28, :28, :], 42)
-
     """
 
-    def __init__(self, image, index, edges):
+    # sides = [top_side, bottom_side, right_side, left_side] are all Side objects
+    def __init__(self, image, index, sides):
         self.image = image[:]
         self.id = index
-        self._edges = edges
+        self.sides = {
+            "t": sides[0],
+            "b": sides[1],
+            "r": sides[2],
+            "l": sides[3]
+        }
 
-        # L, B, R, T
-        # 0 = edge, 1 = head, -1 = divot
-        # self._sides = sides
-
-    def getSide(self, side, numPts):
-
-        epts = self._edges[side]
-        num = len(epts) // numPts
-
-        if num == 0:
-            raise ValueError('Choose a smaller value for numPts')
-
-        return np.array([self._edges[side][num * i] for i in range(numPts)])
+    # side: "t", "r", "b", or "l"
+    def get_side(self, side):
+        return self.sides[side]
 
     def size(self):
         """Returns piece size"""
         return self.image.shape[0]
 
-    def shape(self):
+    def image_shape(self):
         """Returns shape of piece's image"""
         return self.image.shape

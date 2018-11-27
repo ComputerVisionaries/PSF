@@ -1,5 +1,4 @@
 import cv2
-import random
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.misc import imread, imshow, imsave
@@ -7,10 +6,8 @@ from skimage.feature import corner_peaks
 
 
 from puzzle.physicalPiece import PhysicalPiece as piece
+from puzzle.physicalPiece import Side
 
-# accessor functions for sorting
-getR = lambda pt : cart2pol(pt)[1]
-getT = lambda pt : cart2pol(pt)[0]
 
 def cart2pol(epts):
     """ Takes in an Nx2 list of (x,y) points """
@@ -21,14 +18,8 @@ def cart2pol(epts):
     # combine pairwise the theta and magnitute of points 
     return np.array([t, r]).T
 
-def pol2cart(pts):
-    """ Takes in an Nx2 list of (theta,magnitude) points """
-    x = np.cos(pts[:,0]) * pts[:,1]
-    y = np.sin(pts[:,0]) * pts[:,1]
-    
-    return np.array(zip(x,y))
 
-def getCenter(mask):
+def get_center(mask):
     # calculate moments of binary image
     M = cv2.moments(mask)
 
@@ -52,7 +43,6 @@ def getPieceBitmask(img, showSteps, lt=150, ut=255):
     _, im_th = cv2.threshold(img, lower_t, upper_t, cv2.THRESH_BINARY_INV)
     im_th = cv2.GaussianBlur(im_th, ksize=(15, 15), sigmaX=25)
     im_th = cv2.dilate(im_th, kernel, iterations=2)
-
 
     if im_th[0,0] == ut:
         return np.array([]),  False
@@ -116,7 +106,7 @@ def get_sides(img, img_mask, div_th=20, showSteps=True):
     edges = cv2.morphologyEx(img_mask, cv2.MORPH_GRADIENT, np.ones((7,7))).astype(float)
     edges /= 255.0
 
-    cy, cx = getCenter(img_mask)
+    cy, cx = get_center(img_mask)
     center = np.array([cx, cy])
 
     # [ur, br, ul, bl]
@@ -185,29 +175,30 @@ def get_sides(img, img_mask, div_th=20, showSteps=True):
     edges[right_edges[:, 1], right_edges[:, 0]] = 0.7
     edges[left_edges[:, 1], left_edges[:, 0]] = 0.9
 
-    # plt.imshow(edges, cmap='jet')
-    # plt.scatter(corners[0, 0], corners[0, 1], color='b')
-    # plt.scatter(corners[1, 0], corners[1, 1], color='g')
-    # plt.scatter(corners[2, 0], corners[2, 1], color='y')
-    # plt.scatter(corners[3, 0], corners[3, 1], color='r')
-    # plt.scatter(center[0], center[1])
-    # plt.show()
+    if showSteps:
+        plt.imshow(edges, cmap='jet')
+        plt.scatter(corners[0, 0], corners[0, 1], color='b')
+        plt.scatter(corners[1, 0], corners[1, 1], color='g')
+        plt.scatter(corners[2, 0], corners[2, 1], color='y')
+        plt.scatter(corners[3, 0], corners[3, 1], color='r')
+        plt.scatter(center[0], center[1])
+        plt.show()
 
     return {
         "t": {
-            "side": top_puzzle,
+            "edge": top_puzzle,
             "shape": top_shape
             },
         "b": {
-            "side": bottom_puzzle,
+            "edge": bottom_puzzle,
             "shape": bottom_shape
             },
         "r": {
-            "side": right_puzzle,
+            "edge": right_puzzle,
             "shape": right_shape
             },
         "l": {
-            "side": left_puzzle,
+            "edge": left_puzzle,
             "shape": left_shape
             }
     }
@@ -215,7 +206,7 @@ def get_sides(img, img_mask, div_th=20, showSteps=True):
 
 def get_corners(img, showSteps=False):
 
-    cy, cx = getCenter(img)
+    cy, cx = get_center(img)
 
     corners = cv2.cornerHarris(img, 10, 3, 0.04)
     max = corner_peaks(corners, min_distance=70, threshold_abs=0.004)
@@ -225,12 +216,7 @@ def get_corners(img, showSteps=False):
     ur_cand = max[(max[:, 1] > cx) & (max[:, 0] < cy)]
     br_cand = max[(max[:, 1] > cx) & (max[:, 0] > cy)]
 
-    def poly_area(x, y):
-        return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
-
     def rectangular_score(ur, br, ul, bl):
-        arr = np.array([ur, br, ul, bl])
-        area = poly_area(arr[:, 1], arr[:, 0])
         angle_err = abs(ul[0] - ur[0]) + abs(ur[1] - br[1]) + abs(br[0] - bl[0]) + abs(bl[1] - ul[1])
         perim = abs(ul[1] - ur[1]) + abs(ur[0] - br[0]) + abs(br[1] - bl[1]) + abs(bl[0] - ul[0])
         return perim - angle_err
@@ -258,6 +244,7 @@ def get_corners(img, showSteps=False):
         plt.show()
     return max_coords[:, [1, 0]]
 
+
 def load_puzzle():
     pieces = []
 
@@ -267,13 +254,12 @@ def load_puzzle():
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
             grayscale = cv2.cvtColor(im_in, cv2.COLOR_RGB2GRAY)
-            # bitmask, _ = getPieceBitmask(grayscale, False)
-            # piece_info = get_sides(im_in, bitmask)
-            edges = np.load('edges/{}_{}.npy'.format(i,j)).item()
-            
-            pieces.append(piece(im_in, (i * 8) + j, edges))
-
+            bitmask, _ = getPieceBitmask(grayscale, False)
+            piece_info = get_sides(im_in, bitmask)
+            sides = [Side(piece_info[s]["edge"], piece_info[s]["shape"]) for s in piece_info]
+            pieces.append(piece(im_in, (i * 8) + j, sides))
     return pieces    
+
 
 if __name__=='__main__':
     load_puzzle()
