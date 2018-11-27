@@ -7,6 +7,7 @@ PSF/
         similarity_gradient.py
         similarity_lab.py
         similarity_rgb.py
+        similarity_puzzle.py
     puzzle/
         __init__.py
         piece.py
