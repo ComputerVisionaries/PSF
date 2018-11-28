@@ -257,19 +257,16 @@ def get_corners(img, showSteps=False):
 def load_puzzle():
     pieces = []
 
-    # for i in range(8):
-        # for j in range(13):
-    for i in [0]:
-        for j in [6]:
+    for i in range(8):
+        for j in range(13):
             print(i,j)
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             # f = "images/moanaGreen/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
             # grayscale = cv2.cvtColor(im_in, cv2.COLOR_RGB2GRAY)
             bitmask, _ = getPieceBitmask(im_in, False)
-            plt.imshow(bitmask)
-            plt.show()
             # plt.imsave("images/bitmasks/bitmask_{}_{}.jpg".format(i,j), bitmask)
+            # np.save("")
             piece_info = get_sides(im_in, bitmask)
             sides = [Side(piece_info[s]["edge"], piece_info[s]["shape"]) for s in piece_info]
             pieces.append(piece(im_in, (i * 8) + j, sides))
