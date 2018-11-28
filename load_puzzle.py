@@ -15,7 +15,7 @@ def cart2pol(epts):
     x,y = epts[:,0], epts[:,1]
     r = np.sqrt(x**2+y**2)
     t = np.arctan2(y,x)
-    # combine pairwise the theta and magnitute of points 
+    # combine pairwise the theta and magnitute of points
     return np.array([t, r]).T
 
 
@@ -37,10 +37,19 @@ def getPieceBitmask(img, showSteps, lt=150, ut=255):
 
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, ksize=(5,5))
 
-    # Threshold the image (base 130, 255)
-    lower_t = lt
-    upper_t = ut
-    _, im_th = cv2.threshold(img, lower_t, upper_t, cv2.THRESH_BINARY_INV)
+    # Calculate and apply RGB threshold
+    blur = cv2.medianBlur(img, 15)
+    sampleBackground = blur[:200, ...]
+    sampleBackground = np.vstack((sampleBackground, blur[-100:, ...]))
+    samplePixel = np.mean(sampleBackground, axis=(0, 1))
+    sampleStds = np.std(sampleBackground, axis=(0, 1))
+    lower_t = samplePixel - 3 * sampleStds
+    upper_t = samplePixel + 3 * sampleStds
+    im_th = cv2.inRange(blur, lower_t, upper_t, cv2.THRESH_BINARY_INV)
+
+    # lower_t = lt
+    # upper_t = ut
+    # _, im_th = cv2.threshold(img, lower_t, upper_t, cv2.THRESH_BINARY_INV)
     im_th = cv2.GaussianBlur(im_th, ksize=(15, 15), sigmaX=25)
     im_th = cv2.dilate(im_th, kernel, iterations=2)
 
@@ -248,19 +257,24 @@ def get_corners(img, showSteps=False):
 def load_puzzle():
     pieces = []
 
-    for i in range(8):
-        for j in range(13):
+    # for i in range(8):
+        # for j in range(13):
+    for i in [0]:
+        for j in [6]:
             print(i,j)
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
+            # f = "images/moanaGreen/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
-            grayscale = cv2.cvtColor(im_in, cv2.COLOR_RGB2GRAY)
-            bitmask, _ = getPieceBitmask(grayscale, False)
+            # grayscale = cv2.cvtColor(im_in, cv2.COLOR_RGB2GRAY)
+            bitmask, _ = getPieceBitmask(im_in, False)
+            plt.imshow(bitmask)
+            plt.show()
+            # plt.imsave("images/bitmasks/bitmask_{}_{}.jpg".format(i,j), bitmask)
             piece_info = get_sides(im_in, bitmask)
             sides = [Side(piece_info[s]["edge"], piece_info[s]["shape"]) for s in piece_info]
             pieces.append(piece(im_in, (i * 8) + j, sides))
-    return pieces    
+    return pieces
 
 
 if __name__=='__main__':
     load_puzzle()
-
