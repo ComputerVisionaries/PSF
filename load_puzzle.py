@@ -283,7 +283,7 @@ def gen_cheat_puzzle():
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
             edges = np.load('edges/{}_{}.npy'.format(i,j)).item()
-            sides = np.array([edges['l'], edges['t'], edges['r'], edges['b']])
+            sides = np.array([edges['t'], edges['b'], edges['r'], edges['l']])
             pieces.append(piece(im_in, (i * 8) + j, sides))
     return pieces
 
