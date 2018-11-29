@@ -257,7 +257,6 @@ def load_puzzle():
             bitmask, _ = getPieceBitmask(grayscale, showSteps=False)
             if i == 7:
                 bitmask, _ = getPieceBitmask(grayscale, showSteps=False, lt=130)
-            plt.imsave('images/bitmasks/bitmask_{}_{}.jpg'.format(i, j), bitmask)
             piece_info = get_sides(im_in, bitmask, i=i, j=j)
             sides = [Side(piece_info[s]["edge"], piece_info[s]["shape"]) for s in piece_info]
             pieces.append(piece(im_in, (i * 8) + j, sides))
