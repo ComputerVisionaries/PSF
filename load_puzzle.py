@@ -102,7 +102,7 @@ def getPieceBitmask(img, showSteps, lt=150, ut=255):
     return gray_image, True
 
 
-def get_sides(img, img_mask, div_th=20, showSteps=True):
+def get_sides(img, img_mask, div_th=20, showSteps=False):
     edges = cv2.morphologyEx(img_mask, cv2.MORPH_GRADIENT, np.ones((7,7))).astype(float)
     edges /= 255.0
 
@@ -261,6 +261,22 @@ def load_puzzle():
     return pieces    
 
 
+def gen_cheat_puzzle():
+    pieces = []
+
+    for i in range(8):
+        for j in range(13):
+            print(i,j)
+            f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
+            im_in = cv2.imread(f)
+            edges = np.load('edges/{}_{}.npy'.format(i,j)).item()
+            l,b,t,r = edges.keys()
+            sides = np.array([edges[t], edges[b], edges[r], edges[r]])
+            pieces.append(piece(im_in, (i * 8) + j, sides))
+
+    return pieces
+
+
 if __name__=='__main__':
-    load_puzzle()
+    gen_cheat_puzzle()
 
