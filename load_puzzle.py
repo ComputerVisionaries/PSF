@@ -15,7 +15,7 @@ def cart2pol(epts):
     x,y = epts[:,0], epts[:,1]
     r = np.sqrt(x**2+y**2)
     t = np.arctan2(y,x)
-    # combine pairwise the theta and magnitute of points 
+    # combine pairwise the theta and magnitute of points
     return np.array([t, r]).T
 
 
@@ -283,13 +283,11 @@ def gen_cheat_puzzle():
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
             edges = np.load('edges/{}_{}.npy'.format(i,j)).item()
-            l,b,t,r = edges.keys()
-            sides = np.array([edges[t], edges[b], edges[r], edges[r]])
+            sides = np.array([edges['t'], edges['b'], edges['r'], edges['l']])
             pieces.append(piece(im_in, (i * 8) + j, sides))
     return pieces
 
 
 if __name__=='__main__':
-    load_puzzle()
+    # load_puzzle()
     gen_cheat_puzzle()
-
