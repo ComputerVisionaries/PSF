@@ -272,9 +272,24 @@ def load_puzzle():
             np.save('pieces/piece_sides_{}_{}.npy'.format(i, j), piece_info)
             sides = [Side(piece_info[s]["edge"], piece_info[s]["shape"]) for s in piece_info]
             pieces.append(piece(im_in, (i * 8) + j, sides))
-    return pieces    
+    return pieces
+
+
+def gen_cheat_puzzle():
+    pieces = []
+    for i in range(8):
+        for j in range(13):
+            print(i,j)
+            f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
+            im_in = cv2.imread(f)
+            edges = np.load('edges/{}_{}.npy'.format(i,j)).item()
+            l,b,t,r = edges.keys()
+            sides = np.array([edges[t], edges[b], edges[r], edges[r]])
+            pieces.append(piece(im_in, (i * 8) + j, sides))
+    return pieces
 
 
 if __name__=='__main__':
     load_puzzle()
+    gen_cheat_puzzle()
 
