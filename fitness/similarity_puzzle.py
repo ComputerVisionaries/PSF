@@ -4,49 +4,22 @@ import matplotlib.pyplot as plt
 from RelativePosition import RelativePosition
 
 
-def similarity(piece1, piece2, pos, num_pts=100):
-    if pos == "LR":
-        pos = RelativePosition.LEFT_RIGHT
-    if pos == "TD":
-        pos = RelativePosition.ABOVE_BELOW
+def similarity(piece1, piece2, pos):
     # Edge keys: r, b, l, t
-    # TODO: Check that order of comparison is correct
-    # TODO: Compute edge histograms for robustness
-    if pos == RelativePosition.LEFT_RIGHT:
-        points1 = piece1.getSide('r', num_pts)
-        # plt.imshow(piece1.image)
-        # rows = [pt[0] for pt in points1]
-        # cols = [pt[1] for pt in points1]
-        # plt.plot(cols, rows, 'ro')
-        # plt.show()
-        points2 = piece2.getSide('l', num_pts)
+    if pos == 'LR':
+        points1 = piece1.get_side('r')
+        points2 = piece2.get_side('l')
 
         total_error = np.sum(np.square(
             points1.astype(np.float64) - points2.astype(np.float64)))
-        return np.sqrt(total_error) / num_pts
+        return np.sqrt(total_error)
 
-    elif pos == RelativePosition.RIGHT_LEFT:
-        points1 = piece1.getSide('l', num_pts)
-        points2 = piece2.getSide('r', num_pts)
-
-        total_error = np.sum(np.square(
-            points1.astype(np.float64) - points2.astype(np.float64)))
-        return np.sqrt(total_error) / num_pts
-
-    elif pos == RelativePosition.ABOVE_BELOW:
-        points1 = piece1.getSide('t', num_pts)
-        points2 = piece2.getSide('b', num_pts)
+    elif pos == 'TD':
+        points1 = piece1.getSide('t')
+        points2 = piece2.getSide('b')
 
         total_error = np.sum(np.square(
             points1.astype(np.float64) - points2.astype(np.float64)))
-        return np.sqrt(total_error) / num_pts
-
-    elif pos == RelativePosition.BELOW_ABOVE:
-        points1 = piece1.getSide('b', num_pts)
-        points2 = piece2.getSide('t', num_pts)
-
-        total_error = np.sum(np.square(
-            points1.astype(np.float64) - points2.astype(np.float64)))
-        return np.sqrt(total_error) / num_pts
+        return np.sqrt(total_error)
 
     return -1
