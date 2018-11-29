@@ -19,6 +19,13 @@ def cart2pol(epts):
     return np.array([t, r]).T
 
 
+def pol2cart(pts):
+    """ Takes in an Nx2 list of (theta,magnitude) points """
+    x = np.cos(pts[:, 0]) * pts[:, 1]
+    y = np.sin(pts[:, 0]) * pts[:, 1]
+
+    return np.array([x, y]).T.astype(int)
+
 def get_center(mask):
     # calculate moments of binary image
     M = cv2.moments(mask)
@@ -35,13 +42,13 @@ def getPieceBitmask(img, showSteps, lt=150, ut=255):
 
     # General purpose kernel used for multiple things
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, ksize=(5,5))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, ksize=(3,3))
 
     # Threshold the image (base 130, 255)
     lower_t = lt
     upper_t = ut
     _, im_th = cv2.threshold(img, lower_t, upper_t, cv2.THRESH_BINARY_INV)
-    im_th = cv2.GaussianBlur(im_th, ksize=(15, 15), sigmaX=25)
+    im_th = cv2.GaussianBlur(im_th, ksize=(11, 11), sigmaX=15)
     im_th = cv2.dilate(im_th, kernel, iterations=2)
 
     if im_th[0,0] == ut:
@@ -74,9 +81,8 @@ def getPieceBitmask(img, showSteps, lt=150, ut=255):
     imout = im_th | im_floodfill_inv
 
     # smooth out the image using erosion and dilation
-    for i in range(2):
-        imout = cv2.erode(imout, kernel, iterations=2 + i)
-        imout = cv2.dilate(imout, kernel, iterations=3 + i)
+    imout = cv2.erode(imout, kernel, iterations=2)
+    imout = cv2.dilate(imout, kernel, iterations=3)
 
     # convert to greyscale and set
     gray_image = imout.copy()
@@ -102,7 +108,7 @@ def getPieceBitmask(img, showSteps, lt=150, ut=255):
     return gray_image, True
 
 
-def get_sides(img, img_mask, div_th=20, showSteps=False, i=0, j=0):
+def get_sides(img, img_mask, div_th=20, showSteps=False):
     edges = cv2.morphologyEx(img_mask, cv2.MORPH_GRADIENT, np.ones((7,7))).astype(float)
     edges /= 255.0
 
@@ -121,7 +127,11 @@ def get_sides(img, img_mask, div_th=20, showSteps=False, i=0, j=0):
 
     edges_y, edges_x = np.where(edges > 0)
     edges_coords = np.array([edges_x, edges_y]).T
-    edges_theta = cart2pol(edges_coords - center)[:, 0]
+    edges_polar = cart2pol(edges_coords - center)
+
+    edges_theta = edges_polar[:, 0]
+    edges_polar -= np.array([0, 30])
+    edges_coords = pol2cart(edges_polar) + center
 
     top_edges = edges_coords[(edges_theta <= ur_corn_t) & (edges_theta >= ul_corn_t)]
     bottom_edges = edges_coords[(edges_theta <= bl_corn_t) & (edges_theta >= br_corn_t)]
@@ -170,13 +180,14 @@ def get_sides(img, img_mask, div_th=20, showSteps=False, i=0, j=0):
         elif min_right_x < avg_right_x - std_right_x:
             right_shape = -1
 
+    edges[:, :] = 0
     edges[top_edges[:, 1], top_edges[:, 0]] = 0.3
     edges[bottom_edges[:, 1], bottom_edges[:, 0]] = 0.5
     edges[right_edges[:, 1], right_edges[:, 0]] = 0.7
     edges[left_edges[:, 1], left_edges[:, 0]] = 0.9
 
     if showSteps:
-        plt.imshow(edges, cmap='jet')
+        plt.imshow(edges)
         plt.scatter(corners[0, 0], corners[0, 1], color='b')
         plt.scatter(corners[1, 0], corners[1, 1], color='g')
         plt.scatter(corners[2, 0], corners[2, 1], color='y')
@@ -257,7 +268,8 @@ def load_puzzle():
             bitmask, _ = getPieceBitmask(grayscale, showSteps=False)
             if i == 7:
                 bitmask, _ = getPieceBitmask(grayscale, showSteps=False, lt=130)
-            piece_info = get_sides(im_in, bitmask, i=i, j=j)
+            piece_info = get_sides(im_in, bitmask)
+            np.save('pieces/piece_sides_{}_{}.npy'.format(i, j), piece_info)
             sides = [Side(piece_info[s]["edge"], piece_info[s]["shape"]) for s in piece_info]
             pieces.append(piece(im_in, (i * 8) + j, sides))
     return pieces    
