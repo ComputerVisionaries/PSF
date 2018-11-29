@@ -5,6 +5,10 @@ from RelativePosition import RelativePosition
 
 
 def similarity(piece1, piece2, pos, num_pts=100):
+    if pos == "LR":
+        pos = RelativePosition.LEFT_RIGHT
+    if pos == "TD":
+        pos = RelativePosition.ABOVE_BELOW
     # Edge keys: r, b, l, t
     # TODO: Check that order of comparison is correct
     # TODO: Compute edge histograms for robustness
