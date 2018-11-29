@@ -102,7 +102,8 @@ def getPieceBitmask(img, showSteps, lt=150, ut=255):
     return gray_image, True
 
 
-def get_sides(img, img_mask, div_th=20, showSteps=False):
+
+def get_sides(img, img_mask, div_th=20, showSteps=False, i=0, j=0):
     edges = cv2.morphologyEx(img_mask, cv2.MORPH_GRADIENT, np.ones((7,7))).astype(float)
     edges /= 255.0
 
@@ -254,8 +255,10 @@ def load_puzzle():
             f = "images/moanaIndividual/{}_{}.jpg".format(i,j)
             im_in = cv2.imread(f)
             grayscale = cv2.cvtColor(im_in, cv2.COLOR_RGB2GRAY)
-            bitmask, _ = getPieceBitmask(grayscale, False)
-            piece_info = get_sides(im_in, bitmask)
+            bitmask, _ = getPieceBitmask(grayscale, showSteps=False)
+            if i == 7:
+                bitmask, _ = getPieceBitmask(grayscale, showSteps=False, lt=130)
+            piece_info = get_sides(im_in, bitmask, i=i, j=j)
             sides = [Side(piece_info[s]["edge"], piece_info[s]["shape"]) for s in piece_info]
             pieces.append(piece(im_in, (i * 8) + j, sides))
     return pieces    
