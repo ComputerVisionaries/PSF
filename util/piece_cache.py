@@ -1,7 +1,8 @@
 
 # SYSTEM IMPORTS
 # MODULE IMPORTS
-from fitness.edge_difference import edge_difference
+# from fitness.edge_difference import edge_difference
+from fitness.similarity_puzzle import similarity
 from util.progress_bar import print_progress
 
 class PieceCache(object):
@@ -33,7 +34,7 @@ class PieceCache(object):
             }
 
         def update_best_match_table(first_piece, second_piece):
-            measure = edge_difference(first_piece, second_piece, orientation)
+            measure = similarity(first_piece, second_piece, orientation)
             cls.put_dissimilarity((first_piece.id, second_piece.id), orientation, measure)
             cls.best_match_table[second_piece.id][orientation[0]].append((first_piece.id, measure))
             cls.best_match_table[first_piece.id][orientation[1]].append((second_piece.id, measure))

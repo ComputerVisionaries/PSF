@@ -40,6 +40,9 @@ class PhysicalPiece:
             "l": sides[3]
         }
 
+    def __getitem__(self, index):
+        return self.image.__getitem__(index)
+
     # side: "t", "r", "b", or "l"
     def get_side(self, side):
         return self.sides[side]
@@ -48,6 +51,6 @@ class PhysicalPiece:
         """Returns piece size"""
         return self.image.shape[0]
 
-    def image_shape(self):
+    def shape(self):
         """Returns shape of piece's image"""
         return self.image.shape

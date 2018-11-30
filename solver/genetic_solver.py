@@ -155,7 +155,6 @@ class Crossover(object):
             if piece_id in self._kernel:
                 self.add_piece_candidate(relative_piece[0], relative_piece[1], position)
                 continue
-
             self._put_piece_to_kernel(piece_id, position)
 
     def _initialize_kernel(self):
@@ -210,6 +209,8 @@ class Crossover(object):
         for piece, dissimilarity_measure in PieceCache.best_match_table[piece_id][orientation]:
             if self._is_valid_piece(piece):
                 return piece, dissimilarity_measure
+        import pdb; pdb.set_trace()
+        raise Exception("No match for piece!")
 
     def _add_shared_piece_candidate(self, piece_id, position, relative_piece):
         piece_candidate = (SHARED_PIECE_PRIORITY, (position, piece_id), relative_piece)

@@ -25,4 +25,4 @@ def inflate_image(pieces, rows, columns):
             horizontal_stack.append(pieces[i * columns + j])
         vertical_stack.append(np.hstack(horizontal_stack))
 
-    return np.vstack(vertical_stack).astype(np.uint8)
+    return np.vstack(vertical_stack)

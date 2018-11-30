@@ -3,6 +3,8 @@
 import numpy as np
 from util.inflate_image import inflate_image
 from util.piece_cache import PieceCache
+from skimage.transform import resize
+import matplotlib.pyplot as plt
 
 
 class Puzzle(object):
@@ -58,7 +60,9 @@ class Puzzle(object):
 
     def to_image(self):
         """Converts individual to showable image"""
-        pieces = [piece.image for piece in self.pieces]
+        # for piece in self.pieces:
+            # import pdb; pdb.set_trace()
+        pieces = [resize(piece.image, (128, 128)) for piece in self.pieces]
         return inflate_image(pieces, self.rows, self.columns)
 
     def edge(self, piece_id, orientation):
